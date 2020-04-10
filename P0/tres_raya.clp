@@ -344,7 +344,7 @@
 ;;;;;;;;;;; B4) Añadir reglas paraque el sistema incluya la estrategia "Si la maquina puede ganar haciendo una jugada, entonces hace esa jugada". ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defrule clisp_gana_colocando
-	(declare (salience 9999))
+	(declare (salience 1))
 	?f<- (Turno X)
 	(puede_ganar_colocando ?fila ?columna X)
 	?g<- (Posicion ?fila ?columna " ")
@@ -355,7 +355,7 @@
 )
 
 (defrule clisp_gana_moviendo
-	(declare (salience 9999))
+	(declare (salience 1))
 	?f<- (Turno X)
 	(puede_ganar_moviendo ?f1 ?c1 ?f2 ?c2 X)
 	=>
@@ -368,7 +368,7 @@
 ;;;;;;;;;;; B5) Añadir reglas paraque el sistema incluya la estrategia "Si el jugador puede ganar haciendo una jugada y la máquina puede evitarlo, hace la jugada que lo evita". ;;;
 
 (defrule clisp_evita_ganar_colocando
-	(declare (salience 9998))
+	(declare (salience -4))
 	?f<- (Turno X)
 	(Fichas_sin_colocar X ?n)
 	(puede_ganar_colocando ?fila ?columna O)
@@ -380,11 +380,11 @@
 )
 
 (defrule clisp_evita_ganar_moviendo
-	(declare (salience 9998))
+	(declare (salience -5))
 	?f<- (Turno X)
 	(Todas_fichas_en_tablero X)
 	(puede_ganar_moviendo ?f1 ?c1 ?f2 ?c2 O)
-	(Conectado ?2 ?c2 ?forma ?f3 ?c3)
+	(Conectado ?f2 ?c2 ?forma ?f3 ?c3)
 	(Posicion ?f3 ?c3 X)
 	=>
 	(assert (Juega X ?f3 ?c3 ?f2 ?c2))
@@ -393,11 +393,11 @@
 )
 
 (defrule clisp_evita_ganar_moviendo2
-	(declare (salience 9998))
+	(declare (salience -5))
 	?f<- (Turno X)
 	(Todas_fichas_en_tablero X)
 	(puede_ganar_colocando ?f2 ?c2 O)
-	(Conectado ?2 ?c2 ?forma ?f3 ?c3)
+	(Conectado ?f2 ?c2 ?forma ?f3 ?c3)
 	(Posicion ?f3 ?c3 X)
 	=>
 	(assert (Juega X ?f3 ?c3 ?f2 ?c2))
@@ -421,11 +421,14 @@
 )
 
 (defrule clisp_movimiento_2_esquina_caso1
-	(declare (salience 9999))
+	(declare (salience 9998))
 	?f<- (Turno X)
 	(Fichas_sin_colocar X 2)
 	(Fichas_sin_colocar O 2)
 	(Posicion 3 ?c O)
+	(test (or 
+		(eq ?c a)
+		(eq ?c c)))
 	?g<- (Posicion 1 b " ")
 	=>
 	(printout t "Juego poner ficha en 1 b" crlf)
@@ -434,11 +437,14 @@
 )
 
 (defrule clisp_movimiento_2_esquina_caso2
-	(declare (salience 9999))
+	(declare (salience 9998))
 	?f<- (Turno X)
 	(Fichas_sin_colocar X 2)
 	(Fichas_sin_colocar O 2)
 	(Posicion 1 ?c O)
+	(test (or 
+		(eq ?c a)
+		(eq ?c c)))
 	?g<- (Posicion 3 b " ")
 	=>
 	(printout t "Juego poner ficha en 3 b" crlf)
@@ -446,10 +452,63 @@
 	(assert (Posicion 3 b X) (Turno O) (reducir_fichas_sin_colocar X))
 )
 
-;(defrule clisp_movimiento_3_esquina_caso1
-;	(declare (salience 9999))
-;	?f<- (Turno X)
-;	(Todas_fichas_en_tablero X)
-;	(Todas_fichas_en_tablero O)
-;	(Posicion
-;)
+(defrule Comprueba_2_En_Linea_blanco
+	(declare (salience 9999))
+	(logical
+		(Todas_fichas_en_tablero X)
+		(Todas_fichas_en_tablero O)
+		(Conectado ?f1 ?c1 ?forma ?f2 ?c2)
+		(Posicion ?f1 ?c1 " ")
+		(Posicion ?f2 ?c2 " ")
+	)
+	=>
+	(assert (2_blancos_conectados ?forma ?f1 ?c1 ?f2 ?c2))
+)
+
+(defrule mover_ganador
+	(declare (salience -2))
+	?f<- (Turno X)
+	(2_blancos_conectados ?forma ?f1 ?c1 ?f2 ?c2)
+	(Conectado ?f1 ?c1 ?otraforma ?f3 ?c3)
+	(test (neq ?forma ?otraforma))
+	(Posicion ?f3 ?c3 X)
+	(test (or (neq ?f3 2) (neq ?c3 b)))
+	=>
+	(assert (Juega X ?f3 ?c3 ?f1 ?c1))
+	(printout t "Juego mover la ficha de "  ?f3 ?c3 " a " ?f1 ?c1 crlf)
+	(retract ?f)
+)
+
+
+(defrule clisp_movimiento_2_lateral_caso1
+	(declare (salience 9999))
+	?f<- (Turno X)
+	(Fichas_sin_colocar X 2)
+	(Fichas_sin_colocar O 2)
+	(Posicion ?f1 ?c O)
+	(test (or 
+		(and (eq ?f1 3) (eq ?c b))
+		(and (eq ?f1 2) (eq ?c c))))
+	?g<- (Posicion 1 a " ")
+	=>
+	(printout t "Juego poner ficha en 1 a" crlf)
+	(retract ?f ?g)
+	(assert (Posicion 1 a X) (Turno O) (reducir_fichas_sin_colocar X))
+)
+
+
+(defrule clisp_movimiento_2_lateral_caso2
+	(declare (salience 9999))
+	?f<- (Turno X)
+	(Fichas_sin_colocar X 2)
+	(Fichas_sin_colocar O 2)
+	(Posicion ?f1 ?c O)
+	(test (or 
+		(and (eq ?f1 1) (eq ?c b))
+		(and (eq ?f1 2) (eq ?c a))))
+	?g<- (Posicion 3 c " ")
+	=>
+	(printout t "Juego poner ficha en 3 c" crlf)
+	(retract ?f ?g)
+	(assert (Posicion 3 c X) (Turno O) (reducir_fichas_sin_colocar X))
+)
