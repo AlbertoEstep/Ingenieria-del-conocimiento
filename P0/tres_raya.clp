@@ -1,7 +1,7 @@
 ;;;;;;; JUGADOR DE 3 en RAYA ;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Version de 3 en raya clásico: fichas que se pueden poner libremente en cualquier posicion libre (i,j) con 0 < i,j < 4
-;;;;;;;;;;;;;;;;;;;;;;; y cuando se han puesto las 3 fichas las jugadas consisten en desplazar una ficha propia 
+;;;;;;;;;;;;;;;;;;;;;;; y cuando se han puesto las 3 fichas las jugadas consisten en desplazar una ficha propia
 ;;;;;;;;;;;;;;;;;;;;;;; de la posición en que se encuentra (i,j) a una contigua
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -12,7 +12,7 @@
 
 ;;;;;;;;;;;;;;;; Hechos para representar una jugadas
 
-;;;;;;; (Juega X|O ?origen_i ?origen_j ?destino_i ?destino_j) representa que la jugada consiste en desplazar la ficha de la posicion 
+;;;;;;; (Juega X|O ?origen_i ?origen_j ?destino_i ?destino_j) representa que la jugada consiste en desplazar la ficha de la posicion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; (?origen_i,?origen_j) a la posición (?destino_i,?destino_j)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; las fichas que se ponen inicialmente se supondrá que están en el posición (0,0)
 
@@ -100,7 +100,7 @@
 	=>
 	(assert (muestra_posicion))
 )
- 
+
 (defrule jugada_contrario_fichas_sin_colocar
 	?f <- (Turno O)
 	(Fichas_sin_colocar O ?n)
@@ -262,47 +262,26 @@
 	(printout t ?jugador " ha ganado pues tiene tres en raya " ?i1 ?j1 " " ?i2 ?j2 " " ?i3 ?j3 crlf)
 	(retract ?f)
 	(assert (muestra_posicion))
-) 
-
-;;;;;;;;;;; B1) Crear reglas para que el sistema deduzca que dos posiciones están en línea. ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defrule En_linea_horizontal
-	(Conectado ?f1 ?c1 horizontal ?f2 ?c2)
-	=>
-	(assert (Enlinea horizontal ?f1 ?c1 ?f2 ?c2))
-)
-
-(defrule En_linea_vertical
-	(Conectado ?f1 ?c1 vertical ?f2 ?c2)
-	=>
-	(assert (Enlinea vertical ?f1 ?c1 ?f2 ?c2))
-)
-
-(defrule En_linea_diagonal
-	(Conectado ?f1 ?c1 diagonal ?f2 ?c2)
-	=>
-	(assert (Enlinea diagonal ?f1 ?c1 ?f2 ?c2))
-)
-
-(defrule En_linea_diagonal_inversa
-	(Conectado ?f1 ?c1 diagonal_inversa ?f2 ?c2)
-	=>
-	(assert (Enlinea diagonal_inversa ?f1 ?c1 ?f2 ?c2))
-)
-
-(defrule En_linea_no_conectados 
-	(Enlinea ?forma ?f1 ?c1 ?f2 ?c2)
-	(Enlinea ?forma ?f2 ?c2 ?f3 ?c3)
-	(or (test (neq ?f1 ?f3)) (test (neq ?c1 ?c3)))
-	=>
-	(assert (Enlinea ?forma ?f1 ?c1 ?f3 ?c3))
 )
 
 
-;;;;;;;;;;; B2) Crear reglas para que el sistema deduzca y mantenga que un jugador tiene dos fichas en la misma en línea. ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; EJERCICIOS A REALIZAR ;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;; B1) Crear reglas para que el sistema deduzca que dos posiciones están en línea. ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defrule Enlinea
+  (Conectado ?f1 ?c1 ?forma ?f2 ?c2)
+  (Conectado ?f2 ?c2 ?forma ?f3 ?c3)
+  (test (or (neq ?f1 ?f3) (neq ?c1 ?c3)))
+=>
+  (assert (Enlinea ?forma ?f1 ?c1 ?f2 ?c2))
+  (assert (Enlinea ?forma ?f1 ?c1 ?f3 ?c3))
+)
 
 
-(defrule Comprueba_2_En_Linea
+;;;;;;;;;;; B2) Crear reglas para que el sistema deduzca y mantenga que un jugador tiene dos fichas en la misma en línea. ;
+
+(defrule Comprueba_2_en_Linea
 	(declare (salience 9999))
 	(logical
 		(Enlinea ?forma ?f1 ?c1 ?f2 ?c2)
@@ -314,34 +293,34 @@
 	(assert (2_en_linea ?forma ?f1 ?c1 ?f2 ?c2 ?jugador))
 )
 
-;;;;;;;;;;; B3) Crear reglas para deducir y mantener si un jugador puede hacer un movimiento ganador. ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; B3) Crear reglas para deducir y mantener si un jugador puede hacer un movimiento ganador. ;;;;;;;;;;;;;;;;;;;;
 
 (defrule Comprueba_puede_ganar_colocando
 	(declare (salience 9999))
-	(logical 
-		(Fichas_sin_colocar ?jugador 1)			;Comprobamos que queda una ficha sin colocar
+	(logical
+		(Fichas_sin_colocar ?jugador 1)								;Comprobamos que queda una ficha sin colocar
 		(2_en_linea ?forma ?f1 ?c1 ?f2 ?c2 ?jugador)	;Comprobamos que tengamos 2 fichas en linea
-		(Enlinea ?forma ?f1 ?c1 ?f ?c)			;Buscamos la otra posicion de la linea
-		(Posicion ?f ?c " "))				;Comprobamos que este vacia la posicion
+		(Enlinea ?forma ?f1 ?c1 ?f ?c)								;Buscamos la otra posicion de la linea
+		(Posicion ?f ?c " "))													;Comprobamos que este vacia la posicion
 	=>
 	(assert (puede_ganar_colocando ?f ?c ?jugador))
 )
-	
+
 (defrule Comprueba_puede_ganar_moviendo
 	(declare (salience 9999))
 	(logical
-		(Todas_fichas_en_tablero ?jugador)		;Para poder mover
+		(Todas_fichas_en_tablero ?jugador)						;Para poder mover
 		(2_en_linea ?forma ?f1 ?c1 ?f2 ?c2 ?jugador)	;Tiene que haber 2 en linea
-		(Enlinea ?forma ?f1 ?c1 ?f ?c)			;Capturamos la posicion que esta en linea y falta para ganar
-		(Posicion ?f ?c " ")				;Comprobamos que esa posicion este libre
-		(Posicion ?f3 ?c3 ?jugador)			;Buscamos la otra ficha del jugador
-		(Conectado ?f ?c ?otraforma ?f3 ?c3)		;Comprobamos que este conectada con el hueco
-		(test (neq ?forma ?otraforma)))			;Vemos que no sea ninguna de las 2 fichas que estan ya en linea
+		(Enlinea ?forma ?f1 ?c1 ?f ?c)								;Capturamos la posicion que esta en linea y falta para ganar
+		(Posicion ?f ?c " ")													;Comprobamos que esa posicion este libre
+		(Posicion ?f3 ?c3 ?jugador)										;Buscamos la otra ficha del jugador
+		(Conectado ?f ?c ?otraforma ?f3 ?c3)					;Comprobamos que este conectada con el hueco
+		(test (neq ?forma ?otraforma)))								;Vemos que no sea ninguna de las 2 fichas que estan ya en linea
 	=>
-	(assert (puede_ganar_moviendo ?f3 ?c3 ?f ?c ?jugador))	
+	(assert (puede_ganar_moviendo ?f3 ?c3 ?f ?c ?jugador))
 )
 
-;;;;;;;;;;; B4) Añadir reglas paraque el sistema incluya la estrategia "Si la maquina puede ganar haciendo una jugada, entonces hace esa jugada". ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;; B4) Añadir reglas para que el sistema incluya la estrategia "Si la maquina puede ganar haciendo una jugada, entonces hace esa jugada". ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defrule clisp_gana_colocando
 	(declare (salience 1))
@@ -365,7 +344,7 @@
 )
 
 
-;;;;;;;;;;; B5) Añadir reglas paraque el sistema incluya la estrategia "Si el jugador puede ganar haciendo una jugada y la máquina puede evitarlo, hace la jugada que lo evita". ;;;
+;;;;;;;;;;; B5) Añadir reglas para que el sistema incluya la estrategia "Si el jugador puede ganar haciendo una jugada y la máquina puede evitarlo, hace la jugada que lo evita". ;;;
 
 (defrule clisp_evita_ganar_colocando
 	(declare (salience -4))
@@ -408,6 +387,9 @@
 
 ;;;;;;;;;;; Bonus. ;;;
 
+;; En las reglas siguientes conseguiremos que si el jugador juega primero gane siempre
+;; Lo primero que haremos será colocar la primera pieza en el centro del tablero:
+
 (defrule clisp_movimiento_1
 	(declare (salience 9999))
 	?f<- (Turno X)
@@ -420,13 +402,26 @@
 	(assert (Posicion 2 b X) (Turno O) (reducir_fichas_sin_colocar X))
 )
 
+;; De esta forma el primer movimiento del jugador puede ser colocarlo en una esquina o en un lateral.
+;; En verdad solo existen dos posibilidades ya que el campo es simetrico.
+;;	|   |   |   |				|   |   |   |
+;;	|   | X |   |				|   | X |   |
+;;	|   |   | O |       |   | O |   |
+
+
+;; A) CASO ESQUINA:
+;;		Provocaremos que el jugador tenga que tapar los siguientes turnos para que no ganemos:
+;;	|   | X |   |				|   | X |   |				|   | X |   |      |   | X | O |
+;;	|   | X |   |		->	|   | X |   |  ->		|   |	X	|		|  ->  |   | X |   |
+;;	|   |   | O |       |   | O | O |				| X |	O |	O |      | X | O | O |
+
 (defrule clisp_movimiento_2_esquina_caso1
-	(declare (salience 9998))
+	(declare (salience 9999))
 	?f<- (Turno X)
 	(Fichas_sin_colocar X 2)
 	(Fichas_sin_colocar O 2)
 	(Posicion 3 ?c O)
-	(test (or 
+	(test (or
 		(eq ?c a)
 		(eq ?c c)))
 	?g<- (Posicion 1 b " ")
@@ -437,12 +432,12 @@
 )
 
 (defrule clisp_movimiento_2_esquina_caso2
-	(declare (salience 9998))
+	(declare (salience 9999))
 	?f<- (Turno X)
 	(Fichas_sin_colocar X 2)
 	(Fichas_sin_colocar O 2)
 	(Posicion 1 ?c O)
-	(test (or 
+	(test (or
 		(eq ?c a)
 		(eq ?c c)))
 	?g<- (Posicion 3 b " ")
@@ -451,6 +446,15 @@
 	(retract ?f ?g)
 	(assert (Posicion 3 b X) (Turno O) (reducir_fichas_sin_colocar X))
 )
+
+;; A continuacion comprobamos que si movemos la ficha siguiente provocaremos ganar en nuestro siguiente movimiento.
+;; Para ello hemos buscado un patron para los cuatro casos y hemos implementado las siguientes reglas.
+;; El patron consiste en buscar los dos huecos en linea vacíos y comprobamos que tenemos la situacion buscada.
+;; Tenemos en cuenta de no mover la ficha central para bloquear al rival y ganar.
+
+;;	|   | X | O |				| X |   | O |
+;;	|   | X |   |		->	|   | X |   |
+;;	| X | O | O |				| X | O | O |
 
 (defrule Comprueba_2_En_Linea_blanco
 	(declare (salience 9999))
@@ -479,6 +483,11 @@
 	(retract ?f)
 )
 
+;; B) CASO LATERAL:
+;;		Provocaremos que el jugador tenga que tapar los siguientes turnos para que no ganemos:
+;;	| X |   |   |				| X |   |   |				| X |   |   |      | X |   | O |     | X |   |   |
+;;	|   | X |   |		->	|   | X |   |  ->		|   |	X	|		|  ->  |   | X |   |  ó  | O | X |   |
+;;	|   | O |   |       |   | O | O |				| X |	O |	O |      | X | O | O |     | X | O | O |
 
 (defrule clisp_movimiento_2_lateral_caso1
 	(declare (salience 9999))
@@ -486,7 +495,7 @@
 	(Fichas_sin_colocar X 2)
 	(Fichas_sin_colocar O 2)
 	(Posicion ?f1 ?c O)
-	(test (or 
+	(test (or
 		(and (eq ?f1 3) (eq ?c b))
 		(and (eq ?f1 2) (eq ?c c))))
 	?g<- (Posicion 1 a " ")
@@ -503,7 +512,7 @@
 	(Fichas_sin_colocar X 2)
 	(Fichas_sin_colocar O 2)
 	(Posicion ?f1 ?c O)
-	(test (or 
+	(test (or
 		(and (eq ?f1 1) (eq ?c b))
 		(and (eq ?f1 2) (eq ?c a))))
 	?g<- (Posicion 3 c " ")
@@ -512,3 +521,11 @@
 	(retract ?f ?g)
 	(assert (Posicion 3 c X) (Turno O) (reducir_fichas_sin_colocar X))
 )
+
+;; Sin embargo lleguemos al paso que lleguemos de los dos posibles, gracias a las reglas previas implementadas
+;; de evitar ganar al contrario y ganar automaticamente si existe la posibilidad, ambos casos son resueltos de
+;; forma correcta por el algoritmo.
+
+;; Nota: Hemos reflejado en el ejemplo 2 casos de los 8 posibles, pero 4 son analogos al primero y los otros 4
+;; son analogos al segundo. Así hemos conseguido que la maquina consiga la victoria si el turno inicial es el
+;; suyo.
