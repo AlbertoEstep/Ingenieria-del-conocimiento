@@ -15,9 +15,9 @@
 
 (defrule iniciar_contador
 	(Hecho ?XXX $?h)
-  	(not (ContadorYaIniciado ?XXX))
+	(not (NumeroHechos ?XXX ?n))
 	=>
-	(assert (NumeroHechos ?XXX 0) (ContadorYaIniciado ?XXX))
+	(assert (NumeroHechos ?XXX 0))
 )
 
 (defrule contar_hecho
@@ -30,22 +30,5 @@
 	(assert (NumeroHechos ?XXX (+ 1 ?n))) 
 )
 
-(defrule borrar_contador_ya_iniciado
-	(declare (salience -2))
-	?f <- (ContadorYaIniciado ?XXX)
-	=>
-	(retract ?f)
-)
-
-
-(defrule borrar_hecho_contado
-	(declare (salience -1))
-	?f <- (HechoContado ?XXX $?h)
-	=>
-	(retract ?f)
-)
-
-;; NO TERMINADO, ESTUDIAR QUE CUANDO SE INSERTE UN HECHO SE CUENTE (SI NO ES DE LOS HECHOS DEL PRINCIPIO) 
-;; Y ESTUDIAR SI BORRAR LO DEL CONTADOR YA INICIADO YA QUE NO LO HE PROBAO
-
+;; Dejamos los hechos HechoContado ?XXX $?h ya que si se inserta algun hecho necesitamos saber si hemos contado o no los otros hechos.
 
